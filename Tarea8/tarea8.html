@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title> Tarea 8 </title>
+		<script src='/WSClient.js'></script>
+        <script>
+			var foto = null;  // por default la foto es nula
+			function get(id) {
+				return document.getElementById(id);
+			}
+
+			function muestra(elemento) {
+				elemento.style.display = "block";
+			}
+
+			function oculta(elemento) {
+				elemento.style.display = "none";
+			}
+
+			function muestra_pantalla(elemento) {
+				oculta(get("menu"));
+				muestra(elemento);
+			}
+
+            function muestra_pantalla_2(elementoAOcultar, elementoAMostrar) {
+                oculta(elementoAOcultar);
+                muestra(elementoAMostrar);
+            }
+
+			function oculta_pantalla(elemento) {
+				oculta(elemento);
+				muestra(get("menu"));
+			}
+            
+            function readSingleFile(files,imagen){
+                
+                var file = files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function(e)
+                {
+					imagen.src = reader.result;
+					// reader.result incluye al principio: "data:image/jpeg;base64,"
+					foto = reader.result.split(',')[1];
+                };
+                reader.readAsDataURL(file);
+            }
+
+			function limpia_alta() {
+				get("alta_descripcion").value = "";
+				get("alta_precio").value = "";
+				get("alta_cantidad").value = "";
+				get("alta_imagen").src = "/usuario_sin_foto.png";
+			}
+
+			function alta() {
+				var cliente = new WSClient("/Servicio/rest/ws");
+				//var genero = get("alta_genero").value;
+				// da de alta el usuario, si el email ya existe regresa error
+				cliente.post("alta_articulo",
+				{
+					articulo:
+					{
+						descripcion: get("alta_descripcion").value,
+						precio: get("alta_precio").value,
+						catidad: get("alta_cantidad").value,
+						foto: foto
+					}
+				},
+				function(code,result)
+				{
+					if (code == 200)
+						alert("El articulo se dio de alta");
+					else
+						alert(JSON.stringify(result));
+				});
+			}
+
+			function limpia_consulta() {
+				get("consulta_descripcion").value = "";
+				get("consulta_precio").value = "";
+				get("consulta_cantidad").value = "";
+				get("consulta_imagen").src = "/usuario_sin_foto.png";
+			}
+			
+
+			function consulta() {
+				var cliente = new WSClient("/Servicio/rest/ws");
+				console.log("Entro a consulta()");
+				cliente.post("consulta_descripcion",
+				{
+					// se debe pasar como parametro el email del usuario a consultar
+					// si el usuario no existe regresa un error
+					descripcion: get("consulta_descripcion").value
+				},
+				function(code,result)
+				{
+					if (code == 200)
+					{
+						console.log(result);
+						console.log(typeof(result));
+						
+						if(Object.entries(result).length === 0){
+							alert("Tu busqueda no arrojo resultados");
+							console.log("Tu busqueda no arrojo resultados");
+						} else {
+							
+						}
+						
+						console.log("Descripcion: " + result[0].descripcion);
+						console.log("Precio: " + result[0].precio);
+						
+						var tamObj = Object.entries(result).length;
+						
+						const articulos = document.getElementById("articulos");
+						//articulos.remove();
+						for(var i = 0; i < tamObj; i++){
+							
+							console.log("Producto " + i);
+							console.log(result[i].descripcion);
+							console.log(result[i].precio);
+							console.log(result[i].cantidad);
+							console.log(result[i].foto);
+							//console.log(typedef(result[i].foto));
+
+							//console.log("Objeto: " + obj);
+							//console.log(obj.descripcion);
+							//console.log(obj.precio);
+
+							//for(var prop in obj){
+							//	console.log(prop);
+							//}
+							//get("articulo_descripcion").value = result[i].descripcion;
+							//get("articulo_precio").value = result[i].precio;
+							//get("articulo_cantidad").value = result[i].cantidad;
+							//muestra(get("articulo"));
+							
+							
+							//const articulos = document.getElementById("articulos");
+							const articulo = document.getElementById("articulo");
+							//console.log(articulos.removeChild(articulo));
+							
+							const descripcion = document.createElement("p3");
+							descripcion.innerText = "\n" + result[i].descripcion + "\n";
+							articulo.appendChild(descripcion);
+							
+							const precio = document.createElement("p3");
+							precio.innerText = "\n" + result[i].precio + "\n";
+							articulo.appendChild(precio);
+							
+							const cantidad = document.createElement("p3");
+							cantidad.innerText = "\n" + result[i].cantidad + "\n";
+							articulo.appendChild(cantidad);
+							
+							articulos.appendChild(articulo);
+						}
+						
+						//console.log("Tam = " + result.lenght);						
+
+						//limpia_consulta();
+						//get("consulta_descripcion").value = result.descripcion;
+						//get("consulta_precio").value = result.precio;
+						//get("consulta_cantidad").value = result.cantidad;
+						//foto = result.foto;
+						//get("consulta_imagen").src = "data:image/jpeg;base64," + foto;
+
+						//muestra(get("consulta_modifica"));
+						//muestra(get("consulta_file"));
+					}
+					else
+						// el objeto "result" es de tipo Error
+						alert(JSON.stringify(result));
+				});
+			}
+
+			function modifica() {
+
+				var cliente = new WSClient("/Servicio/rest/ws");
+				cliente.post("modifica_articulo",
+				{
+					articulo:
+					{
+						email: get("consulta_email").value,
+						nombre: get("consulta_nombre").value,
+						apellido_paterno: get("consulta_apellido_paterno").value,
+						apellido_materno: get("consulta_apellido_materno").value,
+						fecha_nacimiento: get("consulta_fecha_nacimiento").value,
+						telefono: get("consulta_telefono").value,
+						genero: get("consulta_genero").value == "Masculino" ? "M" :
+							get("consulta_genero").value == "Femenino" ? "F" : 
+							null,
+						foto: foto
+					}
+				},
+				function(code,result)
+				{
+					if (code == 200)
+						alert("El articulo se modificó");
+					else
+						alert(JSON.stringify(result));
+				});
+			}
+                        
+            function limpia_borra() {
+                get("borra_email").value = "";
+            }
+            
+            function borra()
+            {
+                var client = new WSClient("/Servicio/rest/ws");
+                client.post("borra_articulo",
+                                        {
+                                                email: get("borra_email").value
+                                        },
+                                        function(code,result)
+                                        {
+                                                if (code == 200)
+                                                        alert("El articulo se borró");
+                                                else
+                                                        alert(JSON.stringify(result));
+                                        });
+            }
+
+		</script>
+
+    </head>
+
+
+    <body>
+
+        <div id="carrito_compras" style="display:none">
+            <h1>Carrito de compras</h1>
+            
+            <br> <br>
+            <button onclick="muestra_pantalla_2(get('carrito_compras'), get('compra_articulo') )"> Regresar a comprar articulo </button>
+
+        </div>
+
+        <div id="captura_articulo" style="display:none">
+
+            <h1>Captura de articulo</h1>
+
+            <input type="text" id="alta_descripcion" value="" placeholder="Descripción:"> <br>
+            <input type="text" id="alta_precio" value="" placeholder="Precio:"> <br>
+            <input type="text" id="alta_cantidad" value="" placeholder="Cantidad en almacén:" min="0"> <br>
+            
+			<br>
+			<br>
+			<img id="alta_imagen" width="100px" src="/usuario_sin_foto.png"></img><br>
+			<input type="file" onchange="readSingleFile(files,get('alta_imagen'))" multiple="false" accept="image/*"/><br>
+			<br>
+			<button type="button" onclick="alta()" style="width:200px">Registrar articulo</button></br>
+            
+            <br>
+          
+            <br> <br>
+            <button onclick="oculta_pantalla(get('captura_articulo'))" style="width:200px"> Regresar al menu </button>
+
+        </div>
+
+        <div id="compra_articulo" style="display:none">
+
+            <h1>Compra de articulo</h1>
+
+            Buscar articulo: 
+            <input type="search" id="consulta_descripcion" value="" placeholder="Busca producto"> <br>
+            <button type="button" onclick="consulta()"> Buscar </button>
+            
+            <br> <br>
+            <button onclick="muestra_pantalla_2( get('compra_articulo'), get('carrito_compras') )"> Carrito de compras </button>
+
+            <br> <br>
+            <button onclick="oculta_pantalla(get('compra_articulo'))"> Regresar al menu </button>
+
+        </div>
+	
+	
+	<div id="articulos">
+		<div id="articulo"> </div>
+	 </div>
+
+        <div id="menu">
+
+            <h1>Tarea 8</h1>
+            <button onclick="muestra_pantalla(get('captura_articulo'))"> Captura de artículo </button>
+            <button onclick="muestra_pantalla(get('compra_articulo'))"> Compra de artículos </button>
+        
+        </div>
+
+        <!-- <script src="intro.js"> </script> -->
+    
+    </body>
+
+</html>
